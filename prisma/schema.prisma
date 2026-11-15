@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id        String   @id
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+model Connection {
+  provider       String   @id
+  displayName    String?
+  externalUserId String?
+  accessTokenEnc String?
+  refreshTokenEnc String?
+  expiresAt      DateTime?
+  scopes         String?
+  metaJson       String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Setting {
+  key   String @id
+  value String
+}
+
+model WorkspacePreset {
+  id          String   @id
+  name        String
+  playlistIds String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SyncTask {
+  id               String    @id
+  name             String
+  sourceProvider   String
+  sourcePlaylistId String
+  destProvider     String
+  destPlaylistId   String
+  mode             String
+  rulesJson        String
+  intervalMinutes  Int?
+  paused           Boolean   @default(false)
+  lastRunAt        DateTime?
+  status           String    @default("idle")
+  progressJson     String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  runs             SyncRun[]
+}
+
+model SyncRun {
+  id          String    @id
+  taskId      String
+  task        SyncTask  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  startedAt   DateTime  @default(now())
+  finishedAt  DateTime?
+  dryRun      Boolean   @default(false)
+  status      String
+  added       Int       @default(0)
+  removed     Int       @default(0)
+  unchanged   Int       @default(0)
+  matched     Int       @default(0)
+  failed      Int       @default(0)
+  needsReview Int       @default(0)
+  logJson     String?
+  snapshotId  String?
+}
+
+model Snapshot {
+  id          String   @id
+  taskId      String?
+  playlistId  String
+  provider    String
+  label       String
+  payloadJson String
+  createdAt   DateTime @default(now())
+}
+
+model ReviewItem {
+  id              String   @id
+  taskId          String?
+  runId           String?
+  destProvider    String
+  destPlaylistId  String
+  sourceTrackJson String
+  candidatesJson  String
+  status          String   @default("pending")
+  resolutionJson  String?
+  createdAt       DateTime @default(now())
+}
+
